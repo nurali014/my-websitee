@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { LockGate } from '../components/LockGate';
 import { fetchPremium, initPurchases, onPremiumChange } from '../lib/purchases';
 import { StoreProvider, useStore } from '../state/store';
 import { colors } from '../theme';
@@ -36,6 +37,7 @@ export default function RootLayout() {
           <Stack.Screen name="quit" options={{ presentation: 'modal' }} />
           <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
         </Stack>
+        <LockGate />
       </StoreProvider>
     </SafeAreaProvider>
   );

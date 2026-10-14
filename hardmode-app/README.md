@@ -99,6 +99,20 @@ eas submit --platform android
 - Təsvir, açar sözlər (discipline, habit tracker, self improvement, comfort zone, cold shower, motivation)
 - Yaş reytinqi, Privacy anketi (“Data Not Collected” — tətbiq məlumat toplamır; RevenueCat yalnız alış məlumatını emal edir)
 
+## Təhlükəsizlik
+- **Şifrələmə:** bütün məlumatlar (vərdişlər, Vault, Premium statusu) AES-256-GCM ilə şifrələnir. Açar telefonun
+  qorunan yaddaşında saxlanılır (iOS Keychain / Android Keystore). Fayl dəyişdirilsə, tətbiq bunu aşkar edir.
+- **App Lock:** Settings → App Lock. Tətbiq hər açılanda Face ID / barmaq izi / telefon şifrəsi istəyir.
+  Kilidi söndürmək üçün də təsdiq lazımdır.
+- **Server və hesab yoxdur** — oğurlanacaq verilənlər bazası yoxdur. Ödənişi Apple/Google emal edir,
+  alışı RevenueCat serverdə yoxlayır.
+- Qeyd: telefon dəyişəndə (backup-dan bərpa) Android-də açar köçmür, ona görə məlumat yeni telefona keçməyə bilər.
+
+## Apple / Google komissiyası
+- Apple: standart 30%, **Small Business Program**-a qoşulsan 15% (ildə $1M-dan az gəlir) — müraciət etməyi unutma.
+- Google Play: abunəliklərdə 15%.
+- RevenueCat: aylıq $2,500-dən sonra 1%.
+
 ## Pul qazanma strategiyası — tövsiyələr
 - **İllik plan + 7 gün pulsuz sınaq** — bu kateqoriyada ən yaxşı çevrilmə budur.
 - Paywall-u istifadəçi ilk günü qazandıqdan sonra göstərmək (motivasiya ən yüksək olanda) çevrilməni artırır.

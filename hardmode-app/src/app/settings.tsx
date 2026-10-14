@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
-import { Alert, Pressable, Switch, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, Switch, Text, View } from 'react-native';
 
 import { Button, Card, Label, Screen, styles } from '../components/ui';
+import { authenticate, canUseAppLock } from '../lib/biometrics';
 import { scheduleDailyReminder } from '../lib/notifications';
 import { useStore } from '../state/store';
 import { colors } from '../theme';
@@ -9,7 +10,7 @@ import { colors } from '../theme';
 const HOURS = [5, 6, 7, 8, 9, 12, 18, 20];
 
 export default function Settings() {
-  const { data, setReminder, resetAll } = useStore();
+  const { data, setReminder, setLockEnabled, resetAll } = useStore();
   const { reminder } = data;
 
   const update = async (enabled: boolean, hour: number) => {
@@ -21,8 +22,34 @@ export default function Settings() {
     setReminder({ enabled, hour, minute: 0 });
   };
 
+  const toggleLock = async (on: boolean) => {
+    if (on && !(await canUseAppLock())) {
+      return Alert.alert('App Lock unavailable', 'Set up Face ID, a fingerprint, or a passcode on this phone first.');
+    }
+    // Ask for verification both ways, so someone holding an unlocked phone can't turn it off.
+    if (await authenticate(on ? 'Turn on App Lock' : 'Turn off App Lock')) setLockEnabled(on);
+  };
+
   return (
     <Screen>
+      <Card>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.h2, { fontSize: 18 }]}>App Lock</Text>
+            <Text style={styles.body}>Require Face ID, fingerprint, or passcode to open HARDMODE.</Text>
+          </View>
+          <Switch
+            value={data.lockEnabled}
+            onValueChange={toggleLock}
+            disabled={Platform.OS === 'web'}
+            trackColor={{ true: colors.accent, false: colors.surfaceAlt }}
+          />
+        </View>
+        <Text style={[styles.body, { fontSize: 13 }]}>
+          🔒 Your journal and progress are encrypted and never leave this phone.
+        </Text>
+      </Card>
+
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>

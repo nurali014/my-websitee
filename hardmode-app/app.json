@@ -38,6 +38,13 @@
           "backgroundColor": "#0A0A0B"
         }
       ],
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "HARDMODE uses Face ID to keep your journal and progress private."
+        }
+      ],
       [
         "expo-notifications",
         {

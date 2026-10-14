@@ -1,11 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { XP } from '../data/ranks';
 import { addDays, dateKey } from '../lib/date';
+import { loadData, saveData } from '../lib/secureStorage';
 
 export const FREE_HABIT_LIMIT = 3;
-const STORAGE_KEY = 'hardmode:v1';
 
 export type Habit = { id: string; title: string; createdAt: string };
 export type DayLog = { challengeDone?: boolean; hardDone?: boolean; habitsDone?: string[] };
@@ -21,6 +20,8 @@ export type AppData = {
   vault: VaultEntry[];
   reminder: Reminder;
   premium: boolean;
+  /** Require Face ID / fingerprint / device passcode to open the app. */
+  lockEnabled: boolean;
 };
 
 const DEFAULT_DATA: AppData = {
@@ -31,6 +32,7 @@ const DEFAULT_DATA: AppData = {
   vault: [],
   reminder: { enabled: false, hour: 6, minute: 0 },
   premium: false,
+  lockEnabled: false,
 };
 
 const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -102,6 +104,7 @@ type Store = {
   removeVaultEntry: (id: string) => void;
   setReminder: (r: Reminder) => void;
   setPremium: (p: boolean) => void;
+  setLockEnabled: (on: boolean) => void;
   resetAll: () => void;
 };
 
@@ -110,20 +113,23 @@ const StoreContext = createContext<Store | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(DEFAULT_DATA);
   const [ready, setReady] = useState(false);
+  // Only save once loading succeeded, so a failed read can never overwrite the stored data.
+  const [canSave, setCanSave] = useState(false);
   const [today, setToday] = useState(dateKey());
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (raw) setData({ ...DEFAULT_DATA, ...JSON.parse(raw) });
+    loadData<Partial<AppData>>()
+      .then((saved) => {
+        if (saved) setData({ ...DEFAULT_DATA, ...saved });
+        setCanSave(true);
       })
-      .catch(() => {})
+      .catch((e) => console.warn('Could not load app data', e))
       .finally(() => setReady(true));
   }, []);
 
   useEffect(() => {
-    if (ready) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
-  }, [data, ready]);
+    if (canSave) saveData(data).catch((e) => console.warn('Could not save app data', e));
+  }, [data, canSave]);
 
   // Roll over to the new day if the app stays open past midnight.
   useEffect(() => {
@@ -179,6 +185,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeVaultEntry: (id) => setData((d) => ({ ...d, vault: d.vault.filter((v) => v.id !== id) })),
       setReminder: (reminder) => setData((d) => ({ ...d, reminder })),
       setPremium,
+      setLockEnabled: (lockEnabled) => setData((d) => ({ ...d, lockEnabled })),
       // Premium is tied to the store account, not local data, so it survives a reset.
       resetAll: () => setData((d) => ({ ...DEFAULT_DATA, premium: d.premium })),
     };
